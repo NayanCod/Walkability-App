@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id                        String   @id @default(uuid())
+  name                      String
+  image                     String   @default("")
+  email                     String   @unique
+  password                  String
+  isVerified                Boolean  @default(false)
+  isAdmin                   Boolean  @default(false)
+  forgotPasswordToken       String
+  forgotPasswordTokenExpiry DateTime
+  verifyToken               String
+  verifyTokenExpiry         DateTime
+  Review                    Review[]
+}
+
+model Street {
+  id          String   @id @default(uuid())
+  isMock      Boolean  @default(false)
+  address     address  @relation(fields: [addressId], references: [id])
+  addressId   String
+  addressType String
+  boundingBox Float[]
+  category    String
+  displayName String
+  importance  Float
+  name        String
+  osmId       String
+  osmType     String
+  placeId     String
+  placeRank   Int
+  type        String
+  reviews     Review[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Media       Media[]
+}
+
+model address {
+  id            String   @id @default(uuid())
+  isMock        Boolean  @default(false)
+  type          String
+  country       String
+  countryCode   String
+  postCode      String
+  state         String
+  stateDistrict String
+  suburb        String?
+  Street        Street[]
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  isMock     Boolean  @default(false)
+  streetId   String
+  street     Street   @relation(fields: [streetId], references: [id])
+  userId     String? // ID of the user optional because of anonymous
+  user       user?    @relation(fields: [userId], references: [id]) // Reference the user
+  rating     Int // Rating from 1 to 5
+  comment    String? // Optional user comment about the street
+  photoUrl   String? // URL of uploaded photo (can store on cloud)
+  videoUrl   String? // URL of uploaded video (optional)
+  latitude   Float // Latitude of the review
+  longitude  Float // Longitude of the review
+  isReported Boolean  @default(false) // Mark if the review is reported for any issue
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  isMock    Boolean  @default(false)
+  type      String // 'image' or 'video'
+  url       String // Location of media file (can be cloud storage)
+  street    Street   @relation(fields: [streetId], references: [id])
+  streetId  String
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
